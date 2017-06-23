@@ -8,5 +8,12 @@
     <artifactId>meetpoint</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <dependencies>
+    	<dependency>
+  			<groupId>com.github.messenger4j</groupId>
+  			<artifactId>messenger4j</artifactId>
+  			<version>0.8.0</version>
+		</dependency>
+	</dependencies>
 
 </project>
