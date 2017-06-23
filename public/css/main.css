@@ -1,0 +1,24 @@
+header {
+  background-color: #525df9;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.logo,
+.cta {
+  color: #FFF;
+  text-decoration: none;
+}
+
+.logo:hover {
+  text-decoration: none;
+  color: #FFF;
+}
+
+.btn {
+  color: #FFF;
+}
+
+h1 {
+  text-align: center;
+}
