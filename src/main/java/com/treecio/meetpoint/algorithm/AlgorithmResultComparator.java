@@ -11,6 +11,10 @@ public class AlgorithmResultComparator {
     private static double happinessIndex = 1;
 
     public static int compare(AlgorithmResult r1, AlgorithmResult r2) {
+        costIndex *= r1.getMeetingPossibility().getMeeting().getPrioBudget()/100;
+        productivityIndex *= r1.getMeetingPossibility().getMeeting().getPrioProductivity()/100;
+        happinessIndex *= r1.getMeetingPossibility().getMeeting().getPrioHappiness()/100;
+
         ContributorResult c1 =  r1.getStats();
         ContributorResult c2 = r2.getStats();
         double cost1 = c1.getCost();
