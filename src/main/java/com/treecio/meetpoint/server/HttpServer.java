@@ -7,6 +7,7 @@ import java.io.IOException;
 
 /**
  * Class for running the HTTP server
+ *
  */
 public class HttpServer extends NanoHTTPD {
 
@@ -20,6 +21,7 @@ public class HttpServer extends NanoHTTPD {
     public Response serve(IHTTPSession session) {
 
         Log.i(session.getUri());
+        Log.i(session.getQueryParameterString());
 
         String response = "ok!";
 
