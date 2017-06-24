@@ -1,8 +1,9 @@
 package com.treecio.meetpoint.kiwi;
 
 import com.treecio.meetpoint.model.Contributor;
-import com.treecio.meetpoint.model.ContributorInput;
+import com.treecio.meetpoint.model.MeetingPossibility;
 import com.treecio.meetpoint.model.ContributorResult;
+import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.utils.Utils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -19,12 +20,12 @@ public class FlightContributor implements Contributor {
     private static final String requestUrl = "https://api.skypicker.com/flights?";
 
     @NotNull
-    public ContributorResult process(@NotNull ContributorInput cr) throws DestinationImpossible {
+    public ContributorResult process(@NotNull MeetingPossibility cr, @NotNull User user) throws DestinationImpossible {
         Client client = ClientBuilder.newClient();
 
         String requestString = requestUrl +
                 "flyFrom=" +
-                cr.getUser().getOrigin().getName() +
+                user.getOrigin().getName() +
                 "&to=" +
                 cr.getDestination().getName() +
                 "&dateFrom" +
