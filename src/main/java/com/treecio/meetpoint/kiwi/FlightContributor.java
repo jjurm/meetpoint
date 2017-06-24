@@ -52,7 +52,7 @@ public class FlightContributor implements Contributor {
             e.printStackTrace();
         }
 
-        return ContributorResult.Companion.getDefault();
+        return ContributorResult.Companion.createDefault();
 
     }
 }

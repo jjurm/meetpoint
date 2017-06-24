@@ -28,16 +28,14 @@ public class Algorithm {
         contributors.add(new FlightContributor());
     }
 
-    public TreeSet<AlgorithmResult> process(int meetingId) throws IOException, SQLException, CantProcessException {
+    public TreeSet<AlgorithmResult> process(Meeting meeting) throws IOException, SQLException, CantProcessException {
         Connection conn = DatabaseManager.getConnection();
-
-        Meeting meeting = Meeting.Companion.query(meetingId);
 
         List<String> problems = new ArrayList<>();
 
         // find users of the meeting
         List<User> users = new ArrayList<>();
-        try (ResultSet rs = DatabaseManager.getFromDatabase("users", "meeting = " + meetingId)) {
+        try (ResultSet rs = DatabaseManager.getFromDatabase("users", "meeting = " + meeting.getId())) {
             while (rs.next()) {
                 User u = User.Companion.fromResultSet(rs);
                 if (isComplete(u)) {

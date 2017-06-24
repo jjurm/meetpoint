@@ -4,6 +4,7 @@ import com.treecio.meetpoint.algorithm.Algorithm;
 import com.treecio.meetpoint.algorithm.CantProcessException;
 import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.model.Place;
+import com.treecio.meetpoint.model.db.Meeting;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
@@ -42,8 +43,8 @@ public class HttpServer extends NanoHTTPD {
             }
 
             @Override
-            public Response get(IHTTPSession session) {
-                return newFixedLengthResponse("Welcome, let's create a meeting");
+            public Response get(IHTTPSession session) throws IOException {
+                return newFixedLengthResponse(fromFile("html/index_old.html"));
             }
         });
         providers.add(new Provider() {// ===== create meeting =====
@@ -91,13 +92,19 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) throws SQLException, IOException {
-                String token = StringUtils.removeStart("/form/", session.getUri());
+                String token = StringUtils.removeStart(session.getUri(), "/form/");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
 
                 String head = "", navbar = "", form = "", foot = "";
                 head = fromFile("html/head.html");
                 navbar = fromFile("html/navbar.html");
-                form = fromFile("html/form.html");
+                form = fromFile("html/form.html")
+                        .replace("$$$TOKEN$$$", token)
+                        .replace("$$$NAME$$$", u.getName())
+                        .replace("$$$EMAIL$$$", u.getEmail());
                 foot = fromFile("html/foot.html");
                 return newFixedLengthResponse(head + navbar + form + foot);
             }
@@ -109,8 +116,11 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) throws IOException {
-                String token = StringUtils.removeStart(session.getUri(), "/form/submit/");
+                String token = session.getParms().get("token");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
                 if(session.getParms().get("name") == null) {
                     return newFixedLengthResponse("Name is null.");
                 } else if (session.getParms().get("email") == null){
@@ -121,7 +131,7 @@ public class HttpServer extends NanoHTTPD {
                 u.setName(session.getParms().get("name"));
                 u.setEmail(session.getParms().get("email"));
                 u.setOrigin(new Place(session.getParms().get("origin")));
-                u.insert();
+                u.update();
 
                 String head = "", submit = "", foot = "";
                 head = fromFile("html/head.html");
@@ -137,10 +147,17 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) {
-                int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+                int meetingId;
+                try {
+                    meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+                } catch(NumberFormatException e) {
+                    return newFixedLengthResponse("Incorrect URL.");
+                }
+                Meeting meeting = Meeting.Companion.query(meetingId);
+
                 Algorithm alg = new Algorithm();
                 try {
-                    alg.process(meetingId);
+                    alg.process(meeting);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (SQLException e) {

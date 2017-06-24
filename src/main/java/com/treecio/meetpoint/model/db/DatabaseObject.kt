@@ -16,7 +16,7 @@ abstract class DatabaseObject(var id: Int) {
 
     fun update() {
         val conn = DatabaseManager.getConnection()
-        val stmt = conn.prepareStatement("UPDATE " + getTable() + " SET " + getColumns().joinToString(separator = ", ", postfix = " = ?")
+        val stmt = conn.prepareStatement("UPDATE " + getTable() + " SET " + getColumns().joinToString(separator = " = ?, ", postfix = " = ?")
                 + " WHERE id = " + id)
         bindValues(stmt)
         stmt.execute()
