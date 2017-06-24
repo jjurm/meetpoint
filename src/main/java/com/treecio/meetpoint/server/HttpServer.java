@@ -89,19 +89,15 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/form/");
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException {
+            public String get(IHTTPSession session) throws SQLException, IOException {
                 String token = StringUtils.removeStart("/form/", session.getUri());
                 User u = User.Companion.query(token);
 
-                String charset = "UTF-8";
                 String head = "", navbar = "", form = "", foot = "";
-                try {
-                    head = new String(Files.readAllBytes(Paths.get("html/head.html")), charset);
-                    navbar = new String(Files.readAllBytes(Paths.get("html/navbar.html")), charset);
-                    form = new String(Files.readAllBytes(Paths.get("html/form.html")), charset);
-                    foot = new String(Files.readAllBytes(Paths.get("html/foot.html")), charset);
-                } catch (IOException e) {
-                }
+                head = fromFile("html/head.html");
+                navbar = fromFile("html/navbar.html");
+                form = fromFile("html/form.html");
+                foot = fromFile("html/foot.html");
                 return head + navbar + form + foot;
             }
         });
@@ -111,7 +107,7 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/submit/");
             }
             @Override
-            public String get(IHTTPSession session) {
+            public String get(IHTTPSession session) throws IOException {
                 String token = StringUtils.removeStart("/submit/", session.getUri());
                 User u = User.Companion.query(token);
                 u.setName(session.getParms().get("name"));
@@ -119,14 +115,10 @@ public class HttpServer extends NanoHTTPD {
                 u.setOrigin(new Place(session.getParms().get("origin")));
                 u.insert();
 
-                String charset = "UTF-8";
                 String head = "", submit = "", foot = "";
-                try {
-                    head = new String(Files.readAllBytes(Paths.get("html/head.html")), charset);
-                    submit = new String(Files.readAllBytes(Paths.get("html/submit.html")), charset);
-                    foot = new String(Files.readAllBytes(Paths.get("html/foot.html")), charset);
-                } catch (IOException e) {
-                }
+                head = fromFile("html/head.html");
+                submit = fromFile("html/submit.html");
+                foot = fromFile("html/foot.html");
                 return head + submit + foot;
             }
         });
@@ -141,6 +133,17 @@ public class HttpServer extends NanoHTTPD {
                 Algorithm alg = new Algorithm();
                     alg.process(meetingId);
                 return null;
+            }
+        });
+        providers.add(new Provider() {
+            @Override
+            public boolean can(String path) {
+                return new File(path).exists();
+            }
+
+            @Override
+            public String get(IHTTPSession session) throws SQLException, IOException {
+                return fromFile(session.getUri());
             }
         });
     }
@@ -176,6 +179,10 @@ public class HttpServer extends NanoHTTPD {
             response = "404";
         }
         return newFixedLengthResponse(response);
+    }
+
+    private static String fromFile(String path) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
     }
 
     public interface Provider {
