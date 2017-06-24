@@ -4,15 +4,21 @@ html
     meta(charset="UTF-8")
     title Meetpoint — We'll tell you where your next meeting should be.
     link(rel="stylesheet" href="css/main.css")
+    script(src="js/jquery.min.js")
+    script(src="js/jquery.form.min.js")
+    script(src="js/main.js")
   body
     header
       .container
         .row
           .col-xs-6.col-md-10
-            a.logo(href='#') Meetpoint
+            a.logo(href='/') Meetpoint
           .col-xs-6.col-md-2
-            a.btn.cta(href='#') Get Started
+            a.btn.float-right(href='#') Log out
     main
       .container
         .row
           != yield
+    footer
+      .container
+        p.centered-text &copy; 2017 Meetpoint

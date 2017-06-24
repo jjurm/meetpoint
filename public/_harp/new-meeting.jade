@@ -1,15 +1,15 @@
 .col-md-12
   h1 New Meeting
   
-  form(action="#")
+  form(action="/create" method="POST" id="myForm")
     h2 Dates of your trip
     .row
       .col-md-6
         label(for="from") From
-        input(type="date" name="from")
+        input(type="date" name="from" id="from" required)
       .col-md-6
         label(for="to") To
-        input(type="date" name="to")
+        input(type="date" name="to" id="to" required)
       //- .col-md-4
       //-   label(for="days") Number of days
       //-   input(type="number" name="days")
@@ -17,7 +17,7 @@
     .row
       .col-md-6
         label(for="budget") Budget in total [USD]
-        input(type="number" name="budget")
+        input(type="number" name="budget" id="budget" required)
     //- h2 Preferencies
     //- .row
     //-   .col-md-4
@@ -37,21 +37,56 @@
     h2 Priorities
     .row
       .col-md-4
-        label(for="budget") Budget
-        input(type="range" name="budget" min="0" max="100" value="100")
+        label(for="budget-priority") Budget
+        input(type="range" name="budget-priority" min="0" max="100" value="100" id="budget-priority" class="range")
+        span.value 100
       .col-md-4
         label(for="satisfaction") People satisfaction
-        input(type="range" name="satisfaction" min="0" max="100" value="50")
+        input(type="range" name="satisfaction" min="0" max="100" value="50" id="satisfation-priority" class="range")
+        span.value 50
       .col-md-4
         label(for="productivity") Productivity
-        input(type="range" name="productivity" min="0" max="100" value="80")
+        input(type="range" name="productivity" min="0" max="100" value="80" id="productivity-priority" class="range")
+        span.value 80
     h2 Offices Location
     .row
-      .col-md-4
-        span Add something here
+      .col-md-12
+        label(for="offices") Type in the cities
+        input(type="text" name="offices" required)
     h2 People Attending
     .row
-      .col-md-4
-        span Add something here
-  
-  a.btn(href='/new-meeting') Create Meeting
+      .col-md-5
+        label(for="name") Attendee name
+        input(type="text" name="name" required)
+      .col-md-7
+        label(for="email") Attendee email
+        input(type="email" name="email" required)
+    .row
+      .col-md-5
+        label(for="name") Attendee name
+        input(type="text" name="name")
+      .col-md-7
+        label(for="email") Attendee email
+        input(type="email" name="email")
+    .row
+      .col-md-5
+        label(for="name") Attendee name
+        input(type="text" name="name")
+      .col-md-7
+        label(for="email") Attendee email
+        input(type="email" name="email")
+    .row
+      .col-md-5
+        label(for="name") Attendee name
+        input(type="text" name="name")
+      .col-md-7
+        label(for="email") Attendee email
+        input(type="email" name="email")
+    .row
+      .col-md-5
+        label(for="name") Attendee name
+        input(type="text" name="name")
+      .col-md-7
+        label(for="email") Attendee email
+        input(type="email" name="email")
+    input(type="submit" value="Create Meeting") 
