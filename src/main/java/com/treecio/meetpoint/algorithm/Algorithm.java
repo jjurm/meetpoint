@@ -1,9 +1,14 @@
 package com.treecio.meetpoint.algorithm;
 
+import com.treecio.meetpoint.Config;
 import com.treecio.meetpoint.db.DatabaseManager;
+import com.treecio.meetpoint.kiwi.DestinationImpossible;
 import com.treecio.meetpoint.kiwi.FlightContributor;
-import com.treecio.meetpoint.model.Contributor;
+import com.treecio.meetpoint.model.*;
 import com.treecio.meetpoint.model.db.City;
+import com.treecio.meetpoint.model.db.Meeting;
+import com.treecio.meetpoint.model.db.User;
+import com.treecio.meetpoint.model.db.UserPreference;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -11,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 public class Algorithm {
 
@@ -22,20 +28,80 @@ public class Algorithm {
         contributors.add(new FlightContributor());
     }
 
-    public void process(int meetingId) throws IOException, SQLException {
+    public TreeSet<AlgorithmResult> process(int meetingId) throws IOException, SQLException, CantProcessException {
         Connection conn = DatabaseManager.getConnection();
 
-        // iterate through all cities
-        ResultSet rs = conn.prepareStatement("SELECT * FROM cities").executeQuery();
+        Meeting meeting = Meeting.Companion.query(meetingId);
 
-        while (rs.next()) {
+        List<String> problems = new ArrayList<>();
 
-            City city = City.Companion.fromResultSet(rs);
-
-
-
+        // find users of the meeting
+        List<User> users = new ArrayList<>();
+        try (ResultSet rs = DatabaseManager.getFromDatabase("users", "meeting = " + meetingId)) {
+            while (rs.next()) {
+                User u = User.Companion.fromResultSet(rs);
+                if (isComplete(u)) {
+                    users.add(u);
+                } else {
+                    problems.add("User " + u.getEmail() + " still hasn't submitted the form.");
+                }
+            }
         }
 
+        if (problems.size() > 0) {
+            throw new CantProcessException(problems);
+        }
+
+        // create result-holding object
+        TreeSet<AlgorithmResult> results = new TreeSet<AlgorithmResult>(AlgorithmResultComparator::compare);
+
+        // iterate through all cities
+        try (ResultSet rs = conn.prepareStatement("SELECT * FROM cities WHERE " + CITIES_SELECTION).executeQuery()) {
+            while (rs.next()) {
+
+                City city = City.Companion.fromResultSet(rs);
+
+                MeetingPossibility meetingPossibility = new MeetingPossibility(meeting, new Place(city.getCity()));
+
+                try {
+                    ContributorResult usersStats = ContributorResult.Companion.createDefault();
+                    for (User user : users) {
+                        ContributorResult contributorsStats = ContributorResult.Companion.createDefault();
+                        for (Contributor contributor : contributors) {
+
+                            ContributorResult result = contributor.process(meetingPossibility, user);
+
+                            contributorsStats.aggregateOnContributors(result);
+                        }
+                        usersStats.aggregateOnUsers(contributorsStats);
+                    }
+
+                    AlgorithmResult algRes = new AlgorithmResult(meetingPossibility, usersStats);
+
+                    results.add(algRes);
+                    while (results.size() > Config.RESULT_COUNT) {
+                        results.pollLast();
+                    }
+
+                } catch (DestinationImpossible e) {
+                    // just proceed to the next one
+                }
+
+            }
+        }
+
+        return results;
+
+    }
+
+    private boolean isComplete(User u) {
+        for (Preference p : Preference.values()) {
+            UserPreference found = UserPreference.Companion.query(u, p);
+            if (found == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

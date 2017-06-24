@@ -1,6 +1,7 @@
 package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
+import com.treecio.meetpoint.algorithm.CantProcessException;
 import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.model.Place;
 import com.treecio.meetpoint.model.db.User;
@@ -138,13 +139,19 @@ public class HttpServer extends NanoHTTPD {
             public Response get(IHTTPSession session) {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
                 Algorithm alg = new Algorithm();
-                /*try {
+                try {
                     alg.process(meetingId);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (SQLException e) {
                     e.printStackTrace();
-                }*/
+                } catch (CantProcessException e) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String s : e.getProblems()) {
+                        sb.append(s + "\n");
+                    }
+                    return newFixedLengthResponse(sb.toString());
+                }
                 return null;
             }
         });
