@@ -24,7 +24,7 @@ public class DatabaseManager {
 
         String url = "jdbc:mysql://" + getHost() + ":3306/meetpoint?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
-        Connection conn = DriverManager.getConnection(url, "root", "");
+        Connection conn = DriverManager.getConnection(url, "meetpoint", "meetpoint!");
 
         return conn;
 

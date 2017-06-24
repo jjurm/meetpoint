@@ -41,8 +41,8 @@ public class HttpServer extends NanoHTTPD {
             }
 
             @Override
-            public String get(IHTTPSession session) {
-                return "Welcome, let's create a meeting";
+            public Response get(IHTTPSession session) {
+                return newFixedLengthResponse("Welcome, let's create a meeting");
             }
         });
         providers.add(new Provider() {// ===== create meeting =====
@@ -51,14 +51,14 @@ public class HttpServer extends NanoHTTPD {
                 return "/create".equals(path);
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
+            public Response get(IHTTPSession session) throws SQLException, IOException {
                 Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO meetings (name) VALUES (?)");
                 String name = session.getParms().get("name");
                 stmt.setString(1, name);
                 stmt.execute();
 
-                return "Created meeting " + name + "!";
+                return newFixedLengthResponse("Created meeting " + name + "!");
             }
         });
         providers.add(new Provider() {// manage meeting
@@ -68,7 +68,7 @@ public class HttpServer extends NanoHTTPD {
             }
 
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
+            public Response get(IHTTPSession session) throws SQLException, IOException {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/meeting/"));
                 Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement("SELECT * from meetings where id = ?");
@@ -77,19 +77,19 @@ public class HttpServer extends NanoHTTPD {
                 if (rs.next()) {
                     String name = rs.getString("name");
 
-                    return "Manage meeting "+name;
+                    return newFixedLengthResponse("Manage meeting "+name);
                 } else {
-                    return "Meeting not found";
+                    return newFixedLengthResponse("Meeting not found");
                 }
             }
         });
         providers.add(new Provider() {
             @Override
             public boolean can(String path) {
-                return path.startsWith("/form/");
+                return path.startsWith("/form/") && !(path.startsWith("/form/submit"));
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
+            public Response get(IHTTPSession session) throws SQLException, IOException {
                 String token = StringUtils.removeStart("/form/", session.getUri());
                 User u = User.Companion.query(token);
 
@@ -98,18 +98,25 @@ public class HttpServer extends NanoHTTPD {
                 navbar = fromFile("html/navbar.html");
                 form = fromFile("html/form.html");
                 foot = fromFile("html/foot.html");
-                return head + navbar + form + foot;
+                return newFixedLengthResponse(head + navbar + form + foot);
             }
         });
         providers.add(new Provider() {// submit personal data
             @Override
             public boolean can(String path) {
-                return path.startsWith("/submit/");
+                return path.startsWith("/form/submit");
             }
             @Override
-            public String get(IHTTPSession session) throws IOException {
-                String token = StringUtils.removeStart("/submit/", session.getUri());
+            public Response get(IHTTPSession session) throws IOException {
+                String token = StringUtils.removeStart(session.getUri(), "/form/submit/");
                 User u = User.Companion.query(token);
+                if(session.getParms().get("name") == null) {
+                    return newFixedLengthResponse("Name is null.");
+                } else if (session.getParms().get("email") == null){
+                    return newFixedLengthResponse("Email is null.");
+                } else if (session.getParms().get("origin") == null) {
+                    return newFixedLengthResponse("Origin is null");
+                }
                 u.setName(session.getParms().get("name"));
                 u.setEmail(session.getParms().get("email"));
                 u.setOrigin(new Place(session.getParms().get("origin")));
@@ -119,7 +126,7 @@ public class HttpServer extends NanoHTTPD {
                 head = fromFile("html/head.html");
                 submit = fromFile("html/submit.html");
                 foot = fromFile("html/foot.html");
-                return head + submit + foot;
+                return newFixedLengthResponse(head + submit + foot);
             }
         });
         providers.add(new Provider() {// preview results
@@ -128,22 +135,32 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/result/");
             }
             @Override
-            public String get(IHTTPSession session) {
+            public Response get(IHTTPSession session) {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
                 Algorithm alg = new Algorithm();
+                /*try {
                     alg.process(meetingId);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }*/
                 return null;
             }
         });
         providers.add(new Provider() {
             @Override
             public boolean can(String path) {
-                return new File(path).exists();
+                return new File("html" + path).exists();
             }
 
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
-                return fromFile(session.getUri());
+            public Response get(IHTTPSession session) throws SQLException, IOException {
+                String path = "html" + session.getUri();
+                String type = Files.probeContentType(Paths.get(path));
+                Response r = newFixedLengthResponse(fromFile(path));
+                r.addHeader("Content-Type", type);
+                return r;
             }
         });
     }
@@ -162,7 +179,7 @@ public class HttpServer extends NanoHTTPD {
             }
         }
 
-        String response = null;
+        Response response = null;
         for (Provider p : providers) {
             try {
                 if (p.can(session.getUri())) {
@@ -176,9 +193,9 @@ public class HttpServer extends NanoHTTPD {
             }
         }
         if (response == null) {
-            response = "404";
+            response = newFixedLengthResponse("404");
         }
-        return newFixedLengthResponse(response);
+        return response;
     }
 
     private static String fromFile(String path) throws IOException {
@@ -188,7 +205,7 @@ public class HttpServer extends NanoHTTPD {
     public interface Provider {
         public boolean can(String path);
 
-        public String get(IHTTPSession session) throws SQLException, IOException;
+        public Response get(IHTTPSession session) throws SQLException, IOException;
     }
 
 }
