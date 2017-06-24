@@ -2,12 +2,16 @@ package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
 import com.treecio.meetpoint.db.DatabaseManager;
+import com.treecio.meetpoint.model.Place;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -89,7 +93,16 @@ public class HttpServer extends NanoHTTPD {
                 String token = StringUtils.removeStart("/form/", session.getUri());
                 User u = User.Companion.query(token);
 
-                return null;
+                String charset = "UTF-8";
+                String head = "", navbar = "", form = "", foot = "";
+                try {
+                    head = new String(Files.readAllBytes(Paths.get("html/head.html")), charset);
+                    navbar = new String(Files.readAllBytes(Paths.get("html/navbar.html")), charset);
+                    form = new String(Files.readAllBytes(Paths.get("html/form.html")), charset);
+                    foot = new String(Files.readAllBytes(Paths.get("html/foot.html")), charset);
+                } catch (IOException e) {
+                }
+                return head + navbar + form + foot;
             }
         });
         providers.add(new Provider() {// submit personal data
@@ -99,9 +112,22 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public String get(IHTTPSession session) {
-                String token = StringUtils.removeStart("/form/", session.getUri());
+                String token = StringUtils.removeStart("/submit/", session.getUri());
                 User u = User.Companion.query(token);
-                return null;
+                u.setName(session.getParms().get("name"));
+                u.setEmail(session.getParms().get("email"));
+                u.setOrigin(new Place(session.getParms().get("origin")));
+                u.insert();
+
+                String charset = "UTF-8";
+                String head = "", submit = "", foot = "";
+                try {
+                    head = new String(Files.readAllBytes(Paths.get("html/head.html")), charset);
+                    submit = new String(Files.readAllBytes(Paths.get("html/submit.html")), charset);
+                    foot = new String(Files.readAllBytes(Paths.get("html/foot.html")), charset);
+                } catch (IOException e) {
+                }
+                return head + submit + foot;
             }
         });
         providers.add(new Provider() {// preview results
