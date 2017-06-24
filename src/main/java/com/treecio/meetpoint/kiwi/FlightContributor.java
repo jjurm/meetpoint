@@ -1,5 +1,6 @@
 package com.treecio.meetpoint.kiwi;
 
+import com.jjurm.projects.mpp.map.JetLagMap;
 import com.treecio.meetpoint.model.Contributor;
 import com.treecio.meetpoint.model.MeetingPossibility;
 import com.treecio.meetpoint.model.ContributorResult;
@@ -46,13 +47,18 @@ public class FlightContributor implements Contributor {
             double price = Double.parseDouble(actualObj.get("data").get(0).findValue("conversion").findValue("EUR").toString());
             double duration = Utils.timeToSeconds(actualObj.get("data").get(0).findValue("fly_duration").toString());
 
-            return new ContributorResult(price, 1, 1);
+            double lngFrom = Double.parseDouble(actualObj.get("data").get(0).findValue("route").findValue("lngFrom").toString());
+            double lngTo = Double.parseDouble(actualObj.get("data").get(0).findValue("route").findValue("lngTo").toString());
+            double diffhours = Math.abs(lngTo-lngFrom)*4/60;
+            double productivity = JetLagMap.calculateProductivity(diffhours);
+
+            return new ContributorResult(price, productivity, 1);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return ContributorResult.Companion.getDefault();
+        return ContributorResult.Companion.createDefault();
 
     }
 }
