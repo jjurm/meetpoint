@@ -4,6 +4,7 @@ import com.treecio.meetpoint.algorithm.Algorithm;
 import com.treecio.meetpoint.algorithm.CantProcessException;
 import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.model.Place;
+import com.treecio.meetpoint.model.db.Meeting;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
@@ -35,17 +36,8 @@ public class HttpServer extends NanoHTTPD {
     private static final ArrayList<Provider> providers = new ArrayList<>();
 
     static {
-        providers.add(new Provider() {
-            @Override
-            public boolean can(String path) {// ===== create meeting =====
-                return "/".equals(path);
-            }
-
-            @Override
-            public Response get(IHTTPSession session) {
-                return newFixedLengthResponse("Welcome, let's create a meeting");
-            }
-        });
+        providers.add(new PathProvider("/", "html/index.html"));
+        providers.add(new PathProvider("/new-meeting", "html/new-meeting.html"));
         providers.add(new Provider() {// ===== create meeting =====
             @Override
             public boolean can(String path) {
@@ -91,13 +83,19 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) throws SQLException, IOException {
-                String token = StringUtils.removeStart("/form/", session.getUri());
+                String token = StringUtils.removeStart(session.getUri(), "/form/");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
 
                 String head = "", navbar = "", form = "", foot = "";
                 head = fromFile("html/head.html");
                 navbar = fromFile("html/navbar.html");
-                form = fromFile("html/form.html");
+                form = fromFile("html/form.html")
+                        .replace("$$$TOKEN$$$", token)
+                        .replace("$$$NAME$$$", u.getName())
+                        .replace("$$$EMAIL$$$", u.getEmail());
                 foot = fromFile("html/foot.html");
                 return newFixedLengthResponse(head + navbar + form + foot);
             }
@@ -109,8 +107,11 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) throws IOException {
-                String token = StringUtils.removeStart(session.getUri(), "/form/submit/");
+                String token = session.getParms().get("token");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
                 if(session.getParms().get("name") == null) {
                     return newFixedLengthResponse("Name is null.");
                 } else if (session.getParms().get("email") == null){
@@ -121,7 +122,7 @@ public class HttpServer extends NanoHTTPD {
                 u.setName(session.getParms().get("name"));
                 u.setEmail(session.getParms().get("email"));
                 u.setOrigin(new Place(session.getParms().get("origin")));
-                u.insert();
+                u.update();
 
                 String head = "", submit = "", foot = "";
                 head = fromFile("html/head.html");
@@ -137,10 +138,17 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) {
-                int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+                int meetingId;
+                try {
+                    meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+                } catch(NumberFormatException e) {
+                    return newFixedLengthResponse("Incorrect URL.");
+                }
+                Meeting meeting = Meeting.Companion.query(meetingId);
+
                 Algorithm alg = new Algorithm();
                 try {
-                    alg.process(meetingId);
+                    alg.process(meeting);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (SQLException e) {
@@ -165,9 +173,7 @@ public class HttpServer extends NanoHTTPD {
             public Response get(IHTTPSession session) throws SQLException, IOException {
                 String path = "html" + session.getUri();
                 String type = Files.probeContentType(Paths.get(path));
-                Response r = newFixedLengthResponse(fromFile(path));
-                r.addHeader("Content-Type", type);
-                return r;
+                return newFixedLengthResponse(Response.Status.OK, type, fromFile(path));
             }
         });
     }
@@ -200,7 +206,7 @@ public class HttpServer extends NanoHTTPD {
             }
         }
         if (response == null) {
-            response = newFixedLengthResponse("404");
+            response = newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_HTML, "404");
         }
         return response;
     }
@@ -209,10 +215,30 @@ public class HttpServer extends NanoHTTPD {
         return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
     }
 
-    public interface Provider {
+    public static interface Provider {
         public boolean can(String path);
 
         public Response get(IHTTPSession session) throws SQLException, IOException;
+    }
+
+    public static class PathProvider implements Provider {
+        private String external;
+        private String internal;
+
+        public PathProvider(String external, String internal) {
+            this.external = external;
+            this.internal = internal;
+        }
+
+        @Override
+        public boolean can(String path) {
+            return path.equals(external);
+        }
+
+        @Override
+        public Response get(IHTTPSession session) throws SQLException, IOException {
+            return newFixedLengthResponse(fromFile(internal));
+        }
     }
 
 }
