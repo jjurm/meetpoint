@@ -5,5 +5,5 @@ package com.treecio.meetpoint.model
  */
 data class ContributorInput(
         val user: User,
-        val destination: Place
+        val meeting : Meeting
 )
