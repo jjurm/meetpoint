@@ -5,6 +5,7 @@ import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.kiwi.DestinationImpossible;
 import com.treecio.meetpoint.kiwi.FlightContributor;
 import com.treecio.meetpoint.model.*;
+import com.treecio.meetpoint.model.contributors.AltitudeContributor;
 import com.treecio.meetpoint.model.db.City;
 import com.treecio.meetpoint.model.db.Meeting;
 import com.treecio.meetpoint.model.db.User;
@@ -26,6 +27,7 @@ public class Algorithm {
 
     static {
         contributors.add(new FlightContributor());
+        contributors.add(new AltitudeContributor());
     }
 
     public TreeSet<AlgorithmResult> process(Meeting meeting) throws IOException, SQLException, CantProcessException {
@@ -75,6 +77,8 @@ public class Algorithm {
                     }
 
                     AlgorithmResult algRes = new AlgorithmResult(meetingPossibility, usersStats);
+
+                    if(meetingPossibility.getMeeting().getBudget()< usersStats.getCost()) continue;
 
                     results.add(algRes);
                     while (results.size() > Config.RESULT_COUNT) {
