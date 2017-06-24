@@ -1,0 +1,18 @@
+doctype
+html
+  head
+    meta(charset="UTF-8")
+    title Meetpoint — We'll tell you where your next meeting should be.
+    link(rel="stylesheet" href="css/main.css")
+  body
+    header
+      .container
+        .row
+          .col-xs-6.col-md-10
+            a.logo(href='#') Meetpoint
+          .col-xs-6.col-md-2
+            a.btn.cta(href='#') Get Started
+    main
+      .container
+        .row
+          != yield

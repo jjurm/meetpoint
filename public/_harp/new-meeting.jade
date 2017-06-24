@@ -1,0 +1,57 @@
+.col-md-12
+  h1 New Meeting
+  
+  form(action="#")
+    h2 Dates of your trip
+    .row
+      .col-md-6
+        label(for="from") From
+        input(type="date" name="from")
+      .col-md-6
+        label(for="to") To
+        input(type="date" name="to")
+      //- .col-md-4
+      //-   label(for="days") Number of days
+      //-   input(type="number" name="days")
+    h2 Budget
+    .row
+      .col-md-6
+        label(for="budget") Budget in total [USD]
+        input(type="number" name="budget")
+    //- h2 Preferencies
+    //- .row
+    //-   .col-md-4
+    //-     label(for="preferencies") Allow to choose from
+    //-     input(type="checkbox" name="preferencies" value="1") 
+    //-     | Cold Weather
+    //-     br
+    //-     input(type="checkbox" name="preferencies" value="2") 
+    //-     | Warm Weather
+    //-     br
+    //-     input(type="checkbox" name="preferencies" value="3") 
+    //-     | Luxurius Appartment
+    //-     br
+    //-     input(type="checkbox" name="preferencies" value="4") 
+    //-     | Something Adventurous
+    //-     br
+    h2 Priorities
+    .row
+      .col-md-4
+        label(for="budget") Budget
+        input(type="range" name="budget" min="0" max="100" value="100")
+      .col-md-4
+        label(for="satisfaction") People satisfaction
+        input(type="range" name="satisfaction" min="0" max="100" value="50")
+      .col-md-4
+        label(for="productivity") Productivity
+        input(type="range" name="productivity" min="0" max="100" value="80")
+    h2 Offices Location
+    .row
+      .col-md-4
+        span Add something here
+    h2 People Attending
+    .row
+      .col-md-4
+        span Add something here
+  
+  a.btn(href='/new-meeting') Create Meeting
