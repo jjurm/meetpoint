@@ -1,21 +1,24 @@
 package com.treecio.meetpoint;
 
+import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.server.HttpServer;
-
-import java.io.IOException;
 
 public class ServerApp {
 
     public static void main(String[] args) {
 
         try {
-            HttpServer server = new HttpServer();
-
-
-
-        } catch (IOException e) {
+            run();
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
+    }
+
+    public static void run() throws Exception {
+
+
+        HttpServer server = new HttpServer();
 
     }
 
