@@ -1,8 +1,10 @@
 package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
+import com.treecio.meetpoint.algorithm.CantProcessException;
 import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.model.Place;
+import com.treecio.meetpoint.model.db.Meeting;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
@@ -34,31 +36,22 @@ public class HttpServer extends NanoHTTPD {
     private static final ArrayList<Provider> providers = new ArrayList<>();
 
     static {
-        providers.add(new Provider() {
-            @Override
-            public boolean can(String path) {// ===== create meeting =====
-                return "/".equals(path);
-            }
-
-            @Override
-            public String get(IHTTPSession session) {
-                return "Welcome, let's create a meeting";
-            }
-        });
+        providers.add(new PathProvider("/", "html/index.html"));
+        providers.add(new PathProvider("/new-meeting", "html/new-meeting.html"));
         providers.add(new Provider() {// ===== create meeting =====
             @Override
             public boolean can(String path) {
                 return "/create".equals(path);
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
+            public Response get(IHTTPSession session) throws SQLException, IOException {
                 Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO meetings (name) VALUES (?)");
                 String name = session.getParms().get("name");
                 stmt.setString(1, name);
                 stmt.execute();
 
-                return "Created meeting " + name + "!";
+                return newFixedLengthResponse("Created meeting " + name + "!");
             }
         });
         providers.add(new Provider() {// manage meeting
@@ -68,7 +61,7 @@ public class HttpServer extends NanoHTTPD {
             }
 
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
+            public Response get(IHTTPSession session) throws SQLException, IOException {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/meeting/"));
                 Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement("SELECT * from meetings where id = ?");
@@ -77,49 +70,65 @@ public class HttpServer extends NanoHTTPD {
                 if (rs.next()) {
                     String name = rs.getString("name");
 
-                    return "Manage meeting "+name;
+                    return newFixedLengthResponse("Manage meeting "+name);
                 } else {
-                    return "Meeting not found";
+                    return newFixedLengthResponse("Meeting not found");
                 }
             }
         });
         providers.add(new Provider() {
             @Override
             public boolean can(String path) {
-                return path.startsWith("/form/");
+                return path.startsWith("/form/") && !(path.startsWith("/form/submit"));
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
-                String token = StringUtils.removeStart("/form/", session.getUri());
+            public Response get(IHTTPSession session) throws SQLException, IOException {
+                String token = StringUtils.removeStart(session.getUri(), "/form/");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
 
                 String head = "", navbar = "", form = "", foot = "";
                 head = fromFile("html/head.html");
                 navbar = fromFile("html/navbar.html");
-                form = fromFile("html/form.html");
+                form = fromFile("html/form.html")
+                        .replace("$$$TOKEN$$$", token)
+                        .replace("$$$NAME$$$", u.getName())
+                        .replace("$$$EMAIL$$$", u.getEmail());
                 foot = fromFile("html/foot.html");
-                return head + navbar + form + foot;
+                return newFixedLengthResponse(head + navbar + form + foot);
             }
         });
         providers.add(new Provider() {// submit personal data
             @Override
             public boolean can(String path) {
-                return path.startsWith("/submit/");
+                return path.startsWith("/form/submit");
             }
             @Override
-            public String get(IHTTPSession session) throws IOException {
-                String token = StringUtils.removeStart("/submit/", session.getUri());
+            public Response get(IHTTPSession session) throws IOException {
+                String token = session.getParms().get("token");
                 User u = User.Companion.query(token);
+                if (u == null) {
+                    return newFixedLengthResponse("Incorrect token.");
+                }
+                if(session.getParms().get("name") == null) {
+                    return newFixedLengthResponse("Name is null.");
+                } else if (session.getParms().get("email") == null){
+                    return newFixedLengthResponse("Email is null.");
+                } else if (session.getParms().get("origin") == null) {
+                    return newFixedLengthResponse("Origin is null");
+                }
                 u.setName(session.getParms().get("name"));
                 u.setEmail(session.getParms().get("email"));
                 u.setOrigin(new Place(session.getParms().get("origin")));
-                u.insert();
+                u.update();
 
                 String head = "", submit = "", foot = "";
                 head = fromFile("html/head.html");
                 submit = fromFile("html/submit.html");
                 foot = fromFile("html/foot.html");
-                return head + submit + foot;
+                return newFixedLengthResponse(head + submit + foot);
             }
         });
         providers.add(new Provider() {// preview results
@@ -128,22 +137,43 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/result/");
             }
             @Override
-            public String get(IHTTPSession session) {
-                int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+            public Response get(IHTTPSession session) {
+                int meetingId;
+                try {
+                    meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
+                } catch(NumberFormatException e) {
+                    return newFixedLengthResponse("Incorrect URL.");
+                }
+                Meeting meeting = Meeting.Companion.query(meetingId);
+
                 Algorithm alg = new Algorithm();
-                    alg.process(meetingId);
+                try {
+                    alg.process(meeting);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } catch (CantProcessException e) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String s : e.getProblems()) {
+                        sb.append(s + "\n");
+                    }
+                    return newFixedLengthResponse(sb.toString());
+                }
                 return null;
             }
         });
         providers.add(new Provider() {
             @Override
             public boolean can(String path) {
-                return new File(path).exists();
+                return new File("html" + path).exists();
             }
 
             @Override
-            public String get(IHTTPSession session) throws SQLException, IOException {
-                return fromFile(session.getUri());
+            public Response get(IHTTPSession session) throws SQLException, IOException {
+                String path = "html" + session.getUri();
+                String type = Files.probeContentType(Paths.get(path));
+                return newFixedLengthResponse(Response.Status.OK, type, fromFile(path));
             }
         });
     }
@@ -162,7 +192,7 @@ public class HttpServer extends NanoHTTPD {
             }
         }
 
-        String response = null;
+        Response response = null;
         for (Provider p : providers) {
             try {
                 if (p.can(session.getUri())) {
@@ -176,19 +206,39 @@ public class HttpServer extends NanoHTTPD {
             }
         }
         if (response == null) {
-            response = "404";
+            response = newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_HTML, "404");
         }
-        return newFixedLengthResponse(response);
+        return response;
     }
 
     private static String fromFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
     }
 
-    public interface Provider {
+    public static interface Provider {
         public boolean can(String path);
 
-        public String get(IHTTPSession session) throws SQLException, IOException;
+        public Response get(IHTTPSession session) throws SQLException, IOException;
+    }
+
+    public static class PathProvider implements Provider {
+        private String external;
+        private String internal;
+
+        public PathProvider(String external, String internal) {
+            this.external = external;
+            this.internal = internal;
+        }
+
+        @Override
+        public boolean can(String path) {
+            return path.equals(external);
+        }
+
+        @Override
+        public Response get(IHTTPSession session) throws SQLException, IOException {
+            return newFixedLengthResponse(fromFile(internal));
+        }
     }
 
 }

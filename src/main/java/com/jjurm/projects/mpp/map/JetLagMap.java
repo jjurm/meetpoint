@@ -44,4 +44,27 @@ public class JetLagMap extends ProductivityMap {
     return Math.max(productivity1, productivity2);
   }
 
+  public static double calculateProductivity(double hourDiff) {
+    int day = 2;
+    double pm = 0.7;
+
+    double pw = pm * Math.sqrt(LE / LW);
+    double pe = pm * Math.sqrt(LW / LE);
+
+    boolean toEast = hourDiff >= 0;
+    hourDiff = Math.abs(hourDiff);
+
+    double dayCoefficient1 = toEast ? 2 : 2.5;
+    double p1 = toEast ? pe : pw;
+    double productivity1 =
+            1 - Math.pow(Math.max(0, hourDiff - dayCoefficient1 * (day - 1)) / 12, 2) * (1 - p1);
+
+    double dayCoefficient2 = !toEast ? 2 : 2.5;
+    double p2 = !toEast ? pe : pw;
+    double productivity2 =
+            1 - Math.pow(Math.max(0, hourDiff - dayCoefficient2 * (day - 1)) / 12, 2) * (1 - p2);
+
+    return Math.max(productivity1, productivity2);
+  }
+
 }

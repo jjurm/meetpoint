@@ -1,5 +1,6 @@
 package com.treecio.meetpoint.model
 
+import com.treecio.meetpoint.model.db.City
 import com.treecio.meetpoint.model.db.Meeting
 
 /**
@@ -7,5 +8,5 @@ import com.treecio.meetpoint.model.db.Meeting
  */
 data class MeetingPossibility(
         val meeting : Meeting,
-        val destination: Place
+        val destination: City
 )
