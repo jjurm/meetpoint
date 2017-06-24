@@ -8,9 +8,9 @@ import java.sql.PreparedStatement
 
 class User(
         id: Int,
-        val name: String,
-        val email: String,
-        val origin: Place,
+        var name: String,
+        var email: String,
+        var origin: Place,
         val token: String
 ) : DatabaseObject(id) {
 
