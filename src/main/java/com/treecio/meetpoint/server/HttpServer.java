@@ -18,6 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ import java.util.Map;
 public class HttpServer extends NanoHTTPD {
 
     public HttpServer() throws IOException {
-        super(8080);
+        super("0.0.0.0", 8080);
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         Log.i("HTTP Server started");
     }
@@ -45,13 +47,40 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public Response get(IHTTPSession session) throws SQLException, IOException {
-                Connection conn = DatabaseManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement("INSERT INTO meetings (name) VALUES (?)");
-                String name = session.getParms().get("name");
-                stmt.setString(1, name);
-                stmt.execute();
+                if(session.getParms().get("name") == null) {
+                    return newFixedLengthResponse("Form not submitted correctly");
+                }
+                try {
+                    Meeting meeting = new Meeting(
+                            session.getParms().get("name"),
+                            new SimpleDateFormat("yyyy-MM-dd").parse(session.getParms().get("from")),
+                            new SimpleDateFormat("yyyy-MM-dd").parse(session.getParms().get("to")),
+                            Integer.parseInt(session.getParms().get("budget")),
+                            Integer.parseInt(session.getParms().get("budget-priority")),
+                            Integer.parseInt(session.getParms().get("satisfaction")),
+                            Integer.parseInt(session.getParms().get("productivity")),
+                            session.getParms().get("offices")
+                    );
 
-                return newFixedLengthResponse("Created meeting " + name + "!");
+                    int meetingId = meeting.insert();
+                    if (meetingId == -1) {
+                        return newFixedLengthResponse("Can't create the meeting");
+                    }
+
+                    for (int i = 1; i <= 5; i++) {
+                        String name = session.getParms().get("name"+i).trim();
+                        String email = session.getParms().get("email"+i).trim();
+                        if (name.length() > 0 || email.length() > 0) {
+                            User u = new User(meetingId, name, email, new Place());
+                            u.insert();
+                        }
+                    }
+                    return newFixedLengthResponse("Successfully created meeting " + meeting.getName() + " :)");
+                } catch (ParseException e) {
+                    return newFixedLengthResponse("Incorrect date format");
+                } catch (NumberFormatException e) {
+                    return newFixedLengthResponse("Numbers have incorrect format");
+                }
             }
         });
         providers.add(new Provider() {// manage meeting

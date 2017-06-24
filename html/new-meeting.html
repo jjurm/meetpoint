@@ -21,7 +21,15 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12"><h1>New Meeting</h1>
-                <form action="/create" method="POST" id="myForm"><h2>Dates of your trip</h2>
+                <form action="/create" method="POST" id="myForm"><h2>Short description</h2>
+                    <div class="row">
+                        <div class="col-md-12"><label for="name">Name or a short description</label><input type="text"
+                                                                                                           name="name"
+                                                                                                           id="name"
+                                                                                                           required="required">
+                        </div>
+                    </div>
+                    <h2>Dates of your trip</h2>
                     <div class="row">
                         <div class="col-md-6"><label for="from">From</label><input type="date" name="from" id="from"
                                                                                    required="required"></div>
@@ -45,20 +53,22 @@
                                                                                                 id="budget-priority"
                                                                                                 class="range"><span
                                 class="value">100</span></div>
-                        <div class="col-md-4"><label for="satisfaction-priority">People satisfaction</label><input type="range"
-                                                                                                          name="satisfaction"
-                                                                                                          min="0"
-                                                                                                          max="100"
-                                                                                                          value="50"
-                                                                                                          id="satisfaction-priority"
-                                                                                                          class="range"><span
+                        <div class="col-md-4"><label for="satisfaction-priority">People satisfaction</label><input
+                                type="range"
+                                name="satisfaction"
+                                min="0"
+                                max="100"
+                                value="50"
+                                id="satisfaction-priority"
+                                class="range"><span
                                 class="value">50</span></div>
                         <div class="col-md-4"><label for="productivity-priority">Productivity</label><input type="range"
-                                                                                                   name="productivity"
-                                                                                                   min="0" max="100"
-                                                                                                   value="80"
-                                                                                                   id="productivity-priority"
-                                                                                                   class="range"><span
+                                                                                                            name="productivity"
+                                                                                                            min="0"
+                                                                                                            max="100"
+                                                                                                            value="80"
+                                                                                                            id="productivity-priority"
+                                                                                                            class="range"><span
                                 class="value">80</span></div>
                     </div>
                     <h2>Offices Location</h2>
@@ -71,33 +81,46 @@
                     </div>
                     <h2>People Attending</h2>
                     <div class="row">
-                        <div class="col-md-5"><label for="name1">Attendee name</label><input type="text" id="name1" name="name1"
-                                                                                            required="required"></div>
-                        <div class="col-md-7"><label for="email1">Attendee email</label><input type="email" id="email1" name="email1"
-                                                                                              required="required"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-5"><label for="name2">Attendee name</label><input type="text" id="name2" name="name2">
-                        </div>
-                        <div class="col-md-7"><label for="email2">Attendee email</label><input type="email" id="email2" name="email2">
+                        <div class="col-md-5"><label for="name1">Attendee name</label><input type="text" id="name1"
+                                                                                             name="name1"
+                                                                                             required="required"></div>
+                        <div class="col-md-7"><label for="email1">Attendee email</label><input type="email" id="email1"
+                                                                                               name="email1"
+                                                                                               required="required">
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-5"><label for="name3">Attendee name</label><input type="text" id="name3" name="name3">
+                        <div class="col-md-5"><label for="name2">Attendee name</label><input type="text" id="name2"
+                                                                                             name="name2">
                         </div>
-                        <div class="col-md-7"><label for="email3">Attendee email</label><input type="email" id="email3" name="email3">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-5"><label for="name4">Attendee name</label><input type="text" name="name4" id="name4">
-                        </div>
-                        <div class="col-md-7"><label for="email4">Attendee email</label><input type="email" name="email4" id="email4">
+                        <div class="col-md-7"><label for="email2">Attendee email</label><input type="email" id="email2"
+                                                                                               name="email2">
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-5"><label for="name5">Attendee name</label><input type="text" name="name5" id="name5">
+                        <div class="col-md-5"><label for="name3">Attendee name</label><input type="text" id="name3"
+                                                                                             name="name3">
                         </div>
-                        <div class="col-md-7"><label for="email5">Attendee email</label><input type="email" name="email5" id="email5">
+                        <div class="col-md-7"><label for="email3">Attendee email</label><input type="email" id="email3"
+                                                                                               name="email3">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5"><label for="name4">Attendee name</label><input type="text" name="name4"
+                                                                                             id="name4">
+                        </div>
+                        <div class="col-md-7"><label for="email4">Attendee email</label><input type="email"
+                                                                                               name="email4"
+                                                                                               id="email4">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5"><label for="name5">Attendee name</label><input type="text" name="name5"
+                                                                                             id="name5">
+                        </div>
+                        <div class="col-md-7"><label for="email5">Attendee email</label><input type="email"
+                                                                                               name="email5"
+                                                                                               id="email5">
                         </div>
                     </div>
                     <input type="submit" value="Create Meeting"></form>
