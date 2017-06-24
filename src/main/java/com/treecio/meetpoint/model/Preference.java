@@ -4,7 +4,8 @@ import java.util.HashMap;
 
 public enum Preference {
 
-    TEMPERATURE(1, "Do you prefer higher temperatures over low?");
+    //TEMPERATURE(1, "Do you prefer higher temperatures over low?")
+    ;
 
     static final HashMap<Integer, Preference> map = new HashMap<>();
 

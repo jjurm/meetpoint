@@ -15,6 +15,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URLEncoder;
 
 public class FlightContributor implements Contributor {
 
@@ -24,21 +25,22 @@ public class FlightContributor implements Contributor {
     public ContributorResult process(@NotNull MeetingPossibility cr, @NotNull User user) throws DestinationImpossible {
         Client client = ClientBuilder.newClient();
 
-        String requestString = requestUrl +
-                "flyFrom=" +
-                user.getOrigin().getName() +
-                "&to=" +
-                cr.getDestination().getCity() +
-                "&dateFrom" +
-                Utils.formattedDate(cr.getMeeting().getStartDate()) +
-                "&dateTo" +
-                Utils.formattedDate(cr.getMeeting().getEndDate());
-
-        Response response = client.target(requestString).request(MediaType.TEXT_PLAIN_TYPE).get();
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode actualObj = null;
         try {
+            String requestString = requestUrl +
+                    "flyFrom=" +
+                    URLEncoder.encode(user.getOrigin().getName(), "UTF-8") +
+                    "&to=" +
+                    URLEncoder.encode(cr.getDestination().getCity(), "UTF-8") +
+                    "&dateFrom=" +
+                    Utils.formattedDate(cr.getMeeting().getStartDate()) +
+                    "&dateTo=" +
+                    Utils.formattedDate(cr.getMeeting().getEndDate());
+
+            Response response = client.target(requestString).request(MediaType.TEXT_PLAIN_TYPE).get();
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode actualObj = null;
+
             actualObj = mapper.readTree(response.readEntity(String.class));
             if (Integer.parseInt(actualObj.get("_results").toString()) == 0) {
                 throw new DestinationImpossible();

@@ -21,7 +21,7 @@ import java.util.TreeSet;
 
 public class Algorithm {
 
-    static final String CITIES_SELECTION = "population > 300000";
+    static final String CITIES_SELECTION = "population > 10000000";
 
     private static final List<Contributor> contributors = new ArrayList<>();
 

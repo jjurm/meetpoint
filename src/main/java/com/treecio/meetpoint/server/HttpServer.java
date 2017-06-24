@@ -1,9 +1,14 @@
 package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
+import com.treecio.meetpoint.algorithm.AlgorithmResultComparator;
 import com.treecio.meetpoint.algorithm.CantProcessException;
 import com.treecio.meetpoint.db.DatabaseManager;
+import com.treecio.meetpoint.model.AlgorithmResult;
+import com.treecio.meetpoint.model.ContributorResult;
+import com.treecio.meetpoint.model.MeetingPossibility;
 import com.treecio.meetpoint.model.Place;
+import com.treecio.meetpoint.model.db.City;
 import com.treecio.meetpoint.model.db.Meeting;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
@@ -23,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 
 /**
  * Class for running the HTTP server
@@ -166,7 +172,7 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/result/");
             }
             @Override
-            public Response get(IHTTPSession session) {
+            public Response get(IHTTPSession session) throws IOException {
                 int meetingId;
                 try {
                     meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
@@ -176,20 +182,43 @@ public class HttpServer extends NanoHTTPD {
                 Meeting meeting = Meeting.Companion.query(meetingId);
 
                 Algorithm alg = new Algorithm();
-                try {
-                    alg.process(meeting);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                } catch (CantProcessException e) {
+                //try {
+                TreeSet<AlgorithmResult> results = new TreeSet<>(AlgorithmResultComparator::compare);
+                results.add(new AlgorithmResult(
+                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
+                        new ContributorResult(5500, 1.1, 0.9)
+                ));
+                results.add(new AlgorithmResult(
+                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
+                        new ContributorResult(5500, 1.1, 0.9)
+                ));
+                results.add(new AlgorithmResult(
+                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
+                        new ContributorResult(5500, 1.1, 0.9)
+                ));
+                //results = alg.process(meeting);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append(fromFile("html/results-top.html"));
+                for (AlgorithmResult res : results) {
+                    sb.append(
+                            fromFile("html/result-one.html")
+                                    .replace("$$$DESTINATION$$$", StringUtils.capitalize(res.getMeetingPossibility().getDestination().getCity()))
+                                    .replace("$$$PRODUCTIVITY$$$", ((int)Math.floor(res.getStats().getProductivity()*100))+"%")
+                                    .replace("$$$HAPPINESS$$$", ((int)Math.floor(res.getStats().getHappiness()*100))+"%")
+                                    .replace("$$$PRICE$$$", ((int)res.getStats().getCost())+" €")
+                    );
+                }
+                sb.append(fromFile("html/results-bottom.html"));
+
+                /*} catch (CantProcessException e) {
                     StringBuilder sb = new StringBuilder();
                     for (String s : e.getProblems()) {
                         sb.append(s + "\n");
                     }
                     return newFixedLengthResponse(sb.toString());
-                }
-                return null;
+                }*/
+                return newFixedLengthResponse(sb.toString());
             }
         });
         providers.add(new Provider() {
