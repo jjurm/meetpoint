@@ -126,11 +126,12 @@ main {
     padding: 20px 40px;
     border-radius: 4px;
     transition: all .3s ease-out;
+    box-shadow: 0px 10px 40px rgba(0,0,0, .15);
     position: relative;
 
     &:hover {
-      box-shadow: 0px 10px 40px rgba(0,0,0, .15);
-      z-index: 999;
+      box-shadow: 0px 0px 0px rgba(0,0,0, .15);
+      // z-index: 999;
     }
 
     h3 {
