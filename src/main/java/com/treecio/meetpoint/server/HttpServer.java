@@ -2,12 +2,16 @@ package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
 import com.treecio.meetpoint.db.DatabaseManager;
+import com.treecio.meetpoint.model.Place;
 import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,11 +89,16 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/form/");
             }
             @Override
-            public String get(IHTTPSession session) throws SQLException {
+            public String get(IHTTPSession session) throws SQLException, IOException {
                 String token = StringUtils.removeStart("/form/", session.getUri());
                 User u = User.Companion.query(token);
 
-                return null;
+                String head = "", navbar = "", form = "", foot = "";
+                head = fromFile("html/head.html");
+                navbar = fromFile("html/navbar.html");
+                form = fromFile("html/form.html");
+                foot = fromFile("html/foot.html");
+                return head + navbar + form + foot;
             }
         });
         providers.add(new Provider() {// submit personal data
@@ -98,10 +107,19 @@ public class HttpServer extends NanoHTTPD {
                 return path.startsWith("/submit/");
             }
             @Override
-            public String get(IHTTPSession session) {
-                String token = StringUtils.removeStart("/form/", session.getUri());
+            public String get(IHTTPSession session) throws IOException {
+                String token = StringUtils.removeStart("/submit/", session.getUri());
                 User u = User.Companion.query(token);
-                return null;
+                u.setName(session.getParms().get("name"));
+                u.setEmail(session.getParms().get("email"));
+                u.setOrigin(new Place(session.getParms().get("origin")));
+                u.insert();
+
+                String head = "", submit = "", foot = "";
+                head = fromFile("html/head.html");
+                submit = fromFile("html/submit.html");
+                foot = fromFile("html/foot.html");
+                return head + submit + foot;
             }
         });
         providers.add(new Provider() {// preview results
@@ -113,14 +131,19 @@ public class HttpServer extends NanoHTTPD {
             public String get(IHTTPSession session) {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
                 Algorithm alg = new Algorithm();
-                try {
                     alg.process(meetingId);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
                 return null;
+            }
+        });
+        providers.add(new Provider() {
+            @Override
+            public boolean can(String path) {
+                return new File(path).exists();
+            }
+
+            @Override
+            public String get(IHTTPSession session) throws SQLException, IOException {
+                return fromFile(session.getUri());
             }
         });
     }
@@ -148,7 +171,7 @@ public class HttpServer extends NanoHTTPD {
                         break;
                     }
                 }
-            } catch (SQLException | IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -156,6 +179,10 @@ public class HttpServer extends NanoHTTPD {
             response = "404";
         }
         return newFixedLengthResponse(response);
+    }
+
+    private static String fromFile(String path) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
     }
 
     public interface Provider {

@@ -3,6 +3,7 @@ package com.treecio.meetpoint.model.db
 import com.treecio.meetpoint.db.DatabaseManager
 import com.treecio.meetpoint.model.Coordinates
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 
 class City(
         id: Int,
@@ -29,19 +30,22 @@ class City(
     }
 
     companion object {
+        fun fromResultSet(rs: ResultSet): City {
+            return City(
+                    rs.getInt("id"),
+                    rs.getString("country"),
+                    rs.getString("city"),
+                    rs.getString("accent"),
+                    rs.getInt("population"),
+                    Coordinates(rs.getDouble("lat"), rs.getDouble("lon")),
+                    rs.getString("tz_id"),
+                    rs.getDouble("alt")
+            )
+        }
         fun querySel(selection: String): City? {
             val rs = DatabaseManager.getFromDatabase("cities", selection)
             if (rs.next()) {
-                return City(
-                        rs.getInt("id"),
-                        rs.getString("country"),
-                        rs.getString("city"),
-                        rs.getString("accent"),
-                        rs.getInt("population"),
-                        Coordinates(rs.getDouble("lat"), rs.getDouble("lon")),
-                        rs.getString("tz_id"),
-                        rs.getDouble("alt")
-                )
+                return fromResultSet(rs);
             }
             return null
         }

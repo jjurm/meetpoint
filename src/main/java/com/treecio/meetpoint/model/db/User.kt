@@ -5,44 +5,49 @@ import com.treecio.meetpoint.model.Place
 import java.math.BigInteger
 import java.security.SecureRandom
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 
 class User(
         id: Int,
-        val name: String,
-        val email: String,
-        val origin: Place,
+        var meeting: Int,
+        var name: String,
+        var email: String,
+        var origin: Place,
         val token: String
 ) : DatabaseObject(id) {
 
     override fun getTable(): String = "users"
-    override fun getColumns(): Array<String> = arrayOf("name", "email", "origin", "token")
+    override fun getColumns(): Array<String> = arrayOf("meeting", "name", "email", "origin", "token")
     override fun bindValues(stmt: PreparedStatement) {
-        stmt.setString(1, name)
-        stmt.setString(2, email)
-        stmt.setString(3, origin.name)
-        stmt.setString(4, token)
+        stmt.setInt(1, meeting)
+        stmt.setString(2, name)
+        stmt.setString(3, email)
+        stmt.setString(4, origin.name)
+        stmt.setString(5, token)
     }
 
-    constructor(name: String, email: String, origin: Place) : this(-1, name, email, origin, generateToken())
+    constructor(meeting: Int, name: String, email: String, origin: Place) : this(-1, meeting, name, email, origin, generateToken())
 
     companion object {
+        fun fromResultSet(rs: ResultSet): User {
+            return User(rs.getInt("id"),
+                    rs.getInt("meeting"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    Place(rs.getString("origin")),
+                    rs.getString("token"))
+        }
         fun querySel(selection: String): User? {
             val rs = DatabaseManager.getFromDatabase("users", selection)
             if (rs.next()) {
-                return User(rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        Place(rs.getString("origin")),
-                        rs.getString("token"))
+                return fromResultSet(rs)
             }
             return null
         }
-
         fun query(id: Int): User? {
 
             return querySel("id = $id")
         }
-
         fun query(token: String): User? {
             return querySel("token = '$token'")
         }

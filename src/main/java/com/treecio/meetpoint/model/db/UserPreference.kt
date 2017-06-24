@@ -35,7 +35,7 @@ class UserPreference(id: Int, val user: Int, val preference: Int, val answer: St
             return null
         }
         fun query(user: User, preference: Preference): UserPreference? {
-            return querySel("user = ${user.id}")
+            return querySel("user = ${user.id} and preference = ${preference.id}")
         }
     }
 
