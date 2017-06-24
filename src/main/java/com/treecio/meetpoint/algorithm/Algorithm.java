@@ -59,7 +59,7 @@ public class Algorithm {
 
                 City city = City.Companion.fromResultSet(rs);
 
-                MeetingPossibility meetingPossibility = new MeetingPossibility(meeting, new Place(city.getCity()));
+                MeetingPossibility meetingPossibility = new MeetingPossibility(meeting, city);
 
                 try {
                     ContributorResult usersStats = ContributorResult.Companion.createDefault();

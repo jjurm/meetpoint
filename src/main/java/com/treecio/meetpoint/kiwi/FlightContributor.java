@@ -28,7 +28,7 @@ public class FlightContributor implements Contributor {
                 "flyFrom=" +
                 user.getOrigin().getName() +
                 "&to=" +
-                cr.getDestination().getName() +
+                cr.getDestination().getCity() +
                 "&dateFrom" +
                 Utils.formattedDate(cr.getMeeting().getStartDate()) +
                 "&dateTo" +
