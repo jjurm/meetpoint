@@ -1,20 +1,24 @@
 package com.treecio.meetpoint.kiwi;
 
 import java.io.IOException;
-import java.sql.Date;
+import java.util.Date;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.treecio.meetpoint.model.Contributor;
+import com.treecio.meetpoint.model.ContributorInput;
+import com.treecio.meetpoint.model.ContributorResult;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.treecio.meetpoint.utils.Utils;
+import org.jetbrains.annotations.NotNull;
 
-public class FlightRequest {
+public class FlightRequest implements Contributor {
 
   private  String flyFrom;
   private  String flyTo;
@@ -76,5 +80,13 @@ public class FlightRequest {
     double duration = Utils.timeToSeconds(actualObj.get("data").get(0).findValue("fly_duration").toString());
     
     return new FlightRequestResult(price, duration);
+  }
+
+  @NotNull
+  public ContributorResult process(@NotNull ContributorInput cr) {
+    FlightRequest t = new FlightRequest(cr.getUser().getOrigin().getName(), cr.getMeeting().getDestination().getName(), cr.getMeeting().getStartDate(), cr.getMeeting().getEndDate());
+    FlightRequestResult result = t.request();
+
+    return new ContributorResult(result.getPrice(), 1, 1);
   }
 }

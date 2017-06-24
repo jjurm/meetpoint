@@ -3,7 +3,7 @@ package com.treecio.meetpoint.kiwi;
 public class FlightRequestResult {
 
   /**
-   * price in €.
+   * price in â‚¬.
    */
   private double price;
   /**
