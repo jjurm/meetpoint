@@ -131,7 +131,13 @@ public class HttpServer extends NanoHTTPD {
             public String get(IHTTPSession session) {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
                 Algorithm alg = new Algorithm();
+                try {
                     alg.process(meetingId);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 return null;
             }
         });
