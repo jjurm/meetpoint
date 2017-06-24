@@ -5,6 +5,6 @@ package com.treecio.meetpoint.model
  */
 interface Contributor {
 
-    fun process(cr: ContributorResult): ContributorResult
+    fun process(cr: ContributorInput): ContributorResult
 
 }
