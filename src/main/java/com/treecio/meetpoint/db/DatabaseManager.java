@@ -1,15 +1,9 @@
 package com.treecio.meetpoint.db;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Properties;
 
-/**
- * Created by JJurM on 24/06/2017.
- */
 public class DatabaseManager {
 
     public static String host;
@@ -25,7 +19,7 @@ public class DatabaseManager {
 
     public static Connection getConnection() throws SQLException, IOException {
 
-        String url = "jdbc:mysql://"+getHost()+":3306/meetpoint?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+        String url = "jdbc:mysql://" + getHost() + ":3306/meetpoint?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
         Connection conn = DriverManager.getConnection(url, "root", "");
         if (conn != null) {
@@ -38,6 +32,11 @@ public class DatabaseManager {
 
     }
 
-
+    public static ResultSet getFromDatabase(String table, String selection) throws IOException, SQLException {
+        Connection conn = getConnection();
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM " + table + " WHERE " + selection);
+        ResultSet rs = stmt.executeQuery();
+        return rs;
+    }
 
 }

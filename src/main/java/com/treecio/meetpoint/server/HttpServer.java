@@ -2,6 +2,7 @@ package com.treecio.meetpoint.server;
 
 import com.treecio.meetpoint.algorithm.Algorithm;
 import com.treecio.meetpoint.db.DatabaseManager;
+import com.treecio.meetpoint.model.db.User;
 import com.treecio.meetpoint.util.Log;
 import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.lang3.StringUtils;
@@ -85,6 +86,9 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public String get(IHTTPSession session) throws SQLException {
+                String token = StringUtils.removeStart("/form/", session.getUri());
+                User u = User.Companion.query(token);
+
                 return null;
             }
         });
@@ -95,6 +99,8 @@ public class HttpServer extends NanoHTTPD {
             }
             @Override
             public String get(IHTTPSession session) {
+                String token = StringUtils.removeStart("/form/", session.getUri());
+                User u = User.Companion.query(token);
                 return null;
             }
         });
