@@ -23,8 +23,7 @@ class User(
         stmt.setString(4, token)
     }
 
-    constructor(name: String, email: String, origin: Place) : this(-1, name, email, origin, generateToken()) {
-    }
+    constructor(name: String, email: String, origin: Place) : this(-1, name, email, origin, generateToken())
 
     companion object {
         fun querySel(selection: String): User? {

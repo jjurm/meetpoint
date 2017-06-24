@@ -1,6 +1,5 @@
 package com.treecio.meetpoint;
 
-import com.treecio.meetpoint.db.DatabaseManager;
 import com.treecio.meetpoint.server.HttpServer;
 
 public class ServerApp {

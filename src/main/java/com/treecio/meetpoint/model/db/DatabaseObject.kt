@@ -7,16 +7,17 @@ import java.sql.PreparedStatement
 abstract class DatabaseObject(var id: Int) {
 
     fun insert() {
-        val conn = DatabaseManager.getConnection();
+        val conn = DatabaseManager.getConnection()
         val stmt = conn.prepareStatement("INSERT INTO " + getTable() + " (" + getColumns().joinToString(separator = ",")
-                + ") VALUES (" + StringUtils.repeat("?", ",", getColumns().size) + ")");
+                + ") VALUES (" + StringUtils.repeat("?", ",", getColumns().size) + ")")
         bindValues(stmt)
         stmt.execute()
     }
 
     fun update() {
-        val conn = DatabaseManager.getConnection();
-        val stmt = conn.prepareStatement("UPDATE "+getTable()+" SET "+getColumns().joinToString(separator = ", ", postfix = " = ?"))
+        val conn = DatabaseManager.getConnection()
+        val stmt = conn.prepareStatement("UPDATE " + getTable() + " SET " + getColumns().joinToString(separator = ", ", postfix = " = ?")
+                + " WHERE id = " + id)
         bindValues(stmt)
         stmt.execute()
     }

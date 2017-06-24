@@ -6,9 +6,9 @@ import java.util.Properties;
 
 public class DatabaseManager {
 
-    public static String host;
+    private static String host;
 
-    public static String getHost() throws IOException {
+    private static String getHost() throws IOException {
         if (host == null) {
             Properties prop = new Properties();
             prop.load(DatabaseManager.class.getClassLoader().getResourceAsStream("meetingpoint.properties"));
@@ -35,8 +35,7 @@ public class DatabaseManager {
     public static ResultSet getFromDatabase(String table, String selection) throws IOException, SQLException {
         Connection conn = getConnection();
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM " + table + " WHERE " + selection);
-        ResultSet rs = stmt.executeQuery();
-        return rs;
+        return stmt.executeQuery();
     }
 
 }

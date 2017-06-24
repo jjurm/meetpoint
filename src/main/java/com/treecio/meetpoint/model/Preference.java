@@ -6,7 +6,7 @@ public enum Preference {
 
     TEMPERATURE(1, "Do you prefer higher temperatures over low?");
 
-    static HashMap<Integer, Preference> map = new HashMap<>();
+    static final HashMap<Integer, Preference> map = new HashMap<>();
 
     static {
         for (Preference p : Preference.values()) {
