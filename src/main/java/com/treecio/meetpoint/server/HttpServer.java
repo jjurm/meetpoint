@@ -36,17 +36,8 @@ public class HttpServer extends NanoHTTPD {
     private static final ArrayList<Provider> providers = new ArrayList<>();
 
     static {
-        providers.add(new Provider() {
-            @Override
-            public boolean can(String path) {// ===== create meeting =====
-                return "/".equals(path);
-            }
-
-            @Override
-            public Response get(IHTTPSession session) throws IOException {
-                return newFixedLengthResponse(fromFile("html/index_old.html"));
-            }
-        });
+        providers.add(new PathProvider("/", "html/index.html"));
+        providers.add(new PathProvider("/new-meeting", "html/new-meeting.html"));
         providers.add(new Provider() {// ===== create meeting =====
             @Override
             public boolean can(String path) {
@@ -182,9 +173,7 @@ public class HttpServer extends NanoHTTPD {
             public Response get(IHTTPSession session) throws SQLException, IOException {
                 String path = "html" + session.getUri();
                 String type = Files.probeContentType(Paths.get(path));
-                Response r = newFixedLengthResponse(fromFile(path));
-                r.addHeader("Content-Type", type);
-                return r;
+                return newFixedLengthResponse(Response.Status.OK, type, fromFile(path));
             }
         });
     }
@@ -217,7 +206,7 @@ public class HttpServer extends NanoHTTPD {
             }
         }
         if (response == null) {
-            response = newFixedLengthResponse("404");
+            response = newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_HTML, "404");
         }
         return response;
     }
@@ -226,10 +215,30 @@ public class HttpServer extends NanoHTTPD {
         return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
     }
 
-    public interface Provider {
+    public static interface Provider {
         public boolean can(String path);
 
         public Response get(IHTTPSession session) throws SQLException, IOException;
+    }
+
+    public static class PathProvider implements Provider {
+        private String external;
+        private String internal;
+
+        public PathProvider(String external, String internal) {
+            this.external = external;
+            this.internal = internal;
+        }
+
+        @Override
+        public boolean can(String path) {
+            return path.equals(external);
+        }
+
+        @Override
+        public Response get(IHTTPSession session) throws SQLException, IOException {
+            return newFixedLengthResponse(fromFile(internal));
+        }
     }
 
 }
