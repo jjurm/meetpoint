@@ -1,0 +1,99 @@
+// *******************************
+// ========== PARTIALS ===========
+// *******************************
+
+@import "grid";
+
+// *******************************
+// ========== VARIABLES ==========
+// *******************************
+
+$purple: #525DF9;
+$light-purple: #858DFA;
+
+// *******************************
+// ========== REST ==========
+// *******************************
+
+header {
+  background-color: #525df9;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.logo,
+.cta {
+  color: #FFF;
+  text-decoration: none;
+}
+
+.logo:hover {
+  text-decoration: none;
+  color: #FFF;
+}
+
+.btn {
+  color: #FFF;
+  border-radius: 4px;
+  padding: 10px 20px 10px 20px;
+  background-color: #858DFA;
+  transition: all .3s ease-out;
+
+  &:hover {
+    color: #525df9;
+    text-decoration: none;
+    background-color: #FFF;
+  }
+}
+
+.centered {
+  float: none;
+  margin: 0 auto;
+}
+
+.centered-text {
+  text-align: center;
+}
+
+main {
+  padding-top: 70px;
+
+  h1 {
+
+  }
+
+  .btn {
+    width: 150px;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+
+    &:hover {
+      background-color: #525df9;
+      color: #FFF;
+    }
+  }
+
+  form {
+    margin-bottom: 40px;
+
+    label {
+      display: block;
+    }
+
+    input {
+      display: inline-block;
+      width: 100%;
+      border: 2px solid #d7d7d7;
+      border-radius: 4px;
+      padding: 10px 20px 10px 20px;
+      margin-top: 10px;
+    }
+
+    input[type=checkbox] {
+      display: inline;
+      padding: 20px;
+      width: 30px;
+    }
+  }
+}

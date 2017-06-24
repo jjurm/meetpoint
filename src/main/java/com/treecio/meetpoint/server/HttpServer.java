@@ -31,7 +31,7 @@ public class HttpServer extends NanoHTTPD {
         Log.i("HTTP Server started");
     }
 
-    static ArrayList<Provider> providers = new ArrayList<>();
+    private static final ArrayList<Provider> providers = new ArrayList<>();
 
     static {
         providers.add(new Provider() {
@@ -139,7 +139,13 @@ public class HttpServer extends NanoHTTPD {
             public String get(IHTTPSession session) {
                 int meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
                 Algorithm alg = new Algorithm();
-                alg.process(meetingId);
+                try {
+                    alg.process(meetingId);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 return null;
             }
         });
@@ -149,14 +155,12 @@ public class HttpServer extends NanoHTTPD {
     public Response serve(IHTTPSession session) {
         Log.i(session.getUri());
 
-        Map<String, String> files = new HashMap<String, String>();
+        Map<String, String> files = new HashMap<>();
         Method method = session.getMethod();
         if (Method.PUT.equals(method) || Method.POST.equals(method)) {
             try {
                 session.parseBody(files);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ResponseException e) {
+            } catch (IOException | ResponseException e) {
                 e.printStackTrace();
             }
         }
@@ -170,9 +174,7 @@ public class HttpServer extends NanoHTTPD {
                         break;
                     }
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (SQLException | IOException e) {
                 e.printStackTrace();
             }
         }

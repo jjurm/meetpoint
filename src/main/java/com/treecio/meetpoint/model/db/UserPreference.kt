@@ -25,7 +25,7 @@ class UserPreference(id: Int, val user: Int, val preference: Int, val answer: St
 
     companion object {
         fun querySel(selection: String): UserPreference? {
-            val rs = DatabaseManager.getFromDatabase("users", selection)
+            val rs = DatabaseManager.getFromDatabase("preferences", selection)
             if (rs.next()) {
                 return UserPreference(rs.getInt("id"),
                         rs.getInt("user"),
@@ -35,9 +35,8 @@ class UserPreference(id: Int, val user: Int, val preference: Int, val answer: St
             return null
         }
         fun query(user: User, preference: Preference): UserPreference? {
-            return querySel("user = ${user.id}")
+            return querySel("user = ${user.id} and preference = ${preference.id}")
         }
     }
-
 
 }
