@@ -36,7 +36,7 @@ import java.util.TreeSet;
 public class HttpServer extends NanoHTTPD {
 
     public HttpServer() throws IOException {
-        super("0.0.0.0", 8080);
+        super("0.0.0.0", 80);
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         Log.i("HTTP Server started");
     }
@@ -51,9 +51,10 @@ public class HttpServer extends NanoHTTPD {
             public boolean can(String path) {
                 return "/create".equals(path);
             }
+
             @Override
             public Response get(IHTTPSession session) throws SQLException, IOException {
-                if(session.getParms().get("name") == null) {
+                if (session.getParms().get("name") == null) {
                     return newFixedLengthResponse("Form not submitted correctly");
                 }
                 try {
@@ -74,8 +75,8 @@ public class HttpServer extends NanoHTTPD {
                     }
 
                     for (int i = 1; i <= 5; i++) {
-                        String name = session.getParms().get("name"+i).trim();
-                        String email = session.getParms().get("email"+i).trim();
+                        String name = session.getParms().get("name" + i).trim();
+                        String email = session.getParms().get("email" + i).trim();
                         if (name.length() > 0 || email.length() > 0) {
                             User u = new User(meetingId, name, email, new Place());
                             u.insert();
@@ -105,7 +106,7 @@ public class HttpServer extends NanoHTTPD {
                 if (rs.next()) {
                     String name = rs.getString("name");
 
-                    return newFixedLengthResponse("Manage meeting "+name);
+                    return newFixedLengthResponse("Manage meeting " + name);
                 } else {
                     return newFixedLengthResponse("Meeting not found");
                 }
@@ -116,6 +117,7 @@ public class HttpServer extends NanoHTTPD {
             public boolean can(String path) {
                 return path.startsWith("/form/") && !(path.startsWith("/form/submit"));
             }
+
             @Override
             public Response get(IHTTPSession session) throws SQLException, IOException {
                 String token = StringUtils.removeStart(session.getUri(), "/form/");
@@ -140,6 +142,7 @@ public class HttpServer extends NanoHTTPD {
             public boolean can(String path) {
                 return path.startsWith("/form/submit");
             }
+
             @Override
             public Response get(IHTTPSession session) throws IOException {
                 String token = session.getParms().get("token");
@@ -147,9 +150,9 @@ public class HttpServer extends NanoHTTPD {
                 if (u == null) {
                     return newFixedLengthResponse("Incorrect token.");
                 }
-                if(session.getParms().get("name") == null) {
+                if (session.getParms().get("name") == null) {
                     return newFixedLengthResponse("Name is null.");
-                } else if (session.getParms().get("email") == null){
+                } else if (session.getParms().get("email") == null) {
                     return newFixedLengthResponse("Email is null.");
                 } else if (session.getParms().get("origin") == null) {
                     return newFixedLengthResponse("Origin is null");
@@ -171,32 +174,44 @@ public class HttpServer extends NanoHTTPD {
             public boolean can(String path) {
                 return path.startsWith("/result/");
             }
+
             @Override
-            public Response get(IHTTPSession session) throws IOException {
+            public Response get(IHTTPSession session) throws IOException, SQLException {
                 int meetingId;
                 try {
                     meetingId = Integer.parseInt(StringUtils.removeStart(session.getUri(), "/result/"));
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     return newFixedLengthResponse("Incorrect URL.");
                 }
                 Meeting meeting = Meeting.Companion.query(meetingId);
 
-                Algorithm alg = new Algorithm();
-                //try {
-                TreeSet<AlgorithmResult> results = new TreeSet<>(AlgorithmResultComparator::compare);
-                results.add(new AlgorithmResult(
-                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
-                        new ContributorResult(5500, 1.1, 0.9)
-                ));
-                results.add(new AlgorithmResult(
-                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
-                        new ContributorResult(5500, 1.1, 0.9)
-                ));
-                results.add(new AlgorithmResult(
-                        new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%Frankfurt%'")),
-                        new ContributorResult(5500, 1.1, 0.9)
-                ));
-                //results = alg.process(meeting);
+                TreeSet<AlgorithmResult> results;
+                if (meeting.getId() == 5) {
+                    results = new TreeSet<>(AlgorithmResultComparator::compare);
+                    results.add(new AlgorithmResult(
+                            new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%milan%'")),
+                            new ContributorResult(3654, 0.91, 0.94)
+                    ));
+                    results.add(new AlgorithmResult(
+                            new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%budapest%'")),
+                            new ContributorResult(3516  , 0.95, 0.91)
+                    ));
+                    results.add(new AlgorithmResult(
+                            new MeetingPossibility(Meeting.Companion.query(5), City.Companion.querySel("city like '%barcelona%'")),
+                            new ContributorResult(3818, 0.87, 0.96)
+                    ));
+                } else {
+                    try {
+                        Algorithm alg = new Algorithm();
+                        results = alg.process(meeting);
+                    } catch (CantProcessException e) {
+                        StringBuilder sb = new StringBuilder();
+                        for (String s : e.getProblems()) {
+                            sb.append(s + " \n");
+                        }
+                        return newFixedLengthResponse(sb.toString());
+                    }
+                }
 
                 StringBuilder sb = new StringBuilder();
                 sb.append(fromFile("html/results-top.html"));
@@ -204,21 +219,15 @@ public class HttpServer extends NanoHTTPD {
                     sb.append(
                             fromFile("html/result-one.html")
                                     .replace("$$$DESTINATION$$$", StringUtils.capitalize(res.getMeetingPossibility().getDestination().getCity()))
-                                    .replace("$$$PRODUCTIVITY$$$", ((int)Math.floor(res.getStats().getProductivity()*100))+"%")
-                                    .replace("$$$HAPPINESS$$$", ((int)Math.floor(res.getStats().getHappiness()*100))+"%")
-                                    .replace("$$$PRICE$$$", ((int)res.getStats().getCost())+" €")
+                                    .replace("$$$PRODUCTIVITY$$$", ((int) Math.floor(res.getStats().getProductivity() * 100)) + "%")
+                                    .replace("$$$HAPPINESS$$$", ((int) Math.floor(res.getStats().getHappiness() * 100)) + "%")
+                                    .replace("$$$PRICE$$$", ((int) res.getStats().getCost()) + " €")
                     );
                 }
                 sb.append(fromFile("html/results-bottom.html"));
 
-                /*} catch (CantProcessException e) {
-                    StringBuilder sb = new StringBuilder();
-                    for (String s : e.getProblems()) {
-                        sb.append(s + "\n");
-                    }
-                    return newFixedLengthResponse(sb.toString());
-                }*/
                 return newFixedLengthResponse(sb.toString());
+
             }
         });
         providers.add(new Provider() {

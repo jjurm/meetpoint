@@ -31,6 +31,6 @@ public class AlgorithmResultComparator {
         double pDiff = ((p1-p2)/Math.max(p1, p2))*productivityIndex;
         double hDiff = ((h1-h2)/Math.max(h1, h2))*happinessIndex;
 
-        return costDiff + pDiff + hDiff > 1 ? 1 : -1;
+        return costDiff + pDiff + hDiff > 0 ? -1 : +1;
     }
 }
